@@ -13,14 +13,19 @@ namespace Mono_Chess
         private SpriteBatch _spriteBatch;
         private Texture2D tile;
         private Pieces pieces;
+        private SpriteFont font;
 
         private int realwidth = 1920, realheight = 1440, keytimer;
         private RenderTarget2D _renderTarget; //2D Texture that we draw to instead instead of screen (no othere file needs access, it is set on instance of _graphics and any related classes obey it)
         private Rectangle _renderDestination; //Rectangle that contains the starting X and Y positions to draw _renderTarget, and the scaling of _renderTarget
         private bool resizing = false;
+        public bool[,] validmoves = new bool[8, 8]; //All false by default (C# standard ig)
+        private int fontscale = 5;
 
         private const int KEYPRESSDELAY = 200;
         KeyboardState lastkey, currentkey;
+
+        private int[] white = new int[4], black = new int[4];
 
         public Game1()
         {
@@ -28,16 +33,16 @@ namespace Mono_Chess
 
             // CODE BELOW IS IRRELEVANT
 
-                //BOTH ASSIGNMENTS ARE THE SAME. THE GraphicsDevice MEMBER OF GAME1 IS EQUAL TO THE member of _graphics (https://stackoverflow.com/questions/13552199/difference-between-game1-graphicsdevice-and-graphics-graphicsdevice) Console.WriteLine(ReferenceEquals(graphics.GraphicsDevice, this.GraphicsDevice)); USE Game.GraphicsDevice NOT _graphics
-                /*width = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-                height = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+            //BOTH ASSIGNMENTS ARE THE SAME. THE GraphicsDevice MEMBER OF GAME1 IS EQUAL TO THE member of _graphics (https://stackoverflow.com/questions/13552199/difference-between-game1-graphicsdevice-and-graphics-graphicsdevice) Console.WriteLine(ReferenceEquals(graphics.GraphicsDevice, this.GraphicsDevice)); USE Game.GraphicsDevice NOT _graphics
+            /*width = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            height = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
 
-                //GraphicsDevice is null here, so we set the preferred window height and width in the initialize method (only relevant if starting windowed, otherwise windowsizechanged event handles fullscreen rez)
-                width = _graphics.GraphicsDevice.DisplayMode.Width;
-                height = _graphics.GraphicsDevice.DisplayMode.Height;
+            //GraphicsDevice is null here, so we set the preferred window height and width in the initialize method (only relevant if starting windowed, otherwise windowsizechanged event handles fullscreen rez)
+            width = _graphics.GraphicsDevice.DisplayMode.Width;
+            height = _graphics.GraphicsDevice.DisplayMode.Height;
 
-                _graphics.PreferredBackBufferWidth = realwidth;
-                _graphics.PreferredBackBufferHeight = realheight;*/
+            _graphics.PreferredBackBufferWidth = realwidth;
+            _graphics.PreferredBackBufferHeight = realheight;*/
 
             // CODE ABOVE IS IRRELEVANT
 
@@ -51,7 +56,7 @@ namespace Mono_Chess
 
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
-            
+
             //My vars
             keytimer = KEYPRESSDELAY;
         }
@@ -62,29 +67,29 @@ namespace Mono_Chess
 
             // CODE BELOW IS IRRELEVANT
 
-                //Determine aspect ratio of window
-                /*switch( ((int)(((float)GraphicsDevice.Viewport.Width / (float)GraphicsDevice.Viewport.Height) * 10)) )
-                {
-                    case 16:
-                        realwidth = 1920;
-                        realheight = 1200;
-                        break;
+            //Determine aspect ratio of window
+            /*switch( ((int)(((float)GraphicsDevice.Viewport.Width / (float)GraphicsDevice.Viewport.Height) * 10)) )
+            {
+                case 16:
+                    realwidth = 1920;
+                    realheight = 1200;
+                    break;
 
-                    case 17:
-                        realwidth = 1920;
-                        realwidth = 1080;
-                        break;
+                case 17:
+                    realwidth = 1920;
+                    realwidth = 1080;
+                    break;
 
-                    default:
-                        realwidth = 1920;
-                        realheight = 1440;
-                        break;
-                }
+                default:
+                    realwidth = 1920;
+                    realheight = 1440;
+                    break;
+            }
 
-                //Set window res to half desktop res (windowed mode debug, when done this is commented)
-                _graphics.PreferredBackBufferWidth = (realwidth);
-                _graphics.PreferredBackBufferHeight = (realheight);
-                _graphics.ApplyChanges();*/
+            //Set window res to half desktop res (windowed mode debug, when done this is commented)
+            _graphics.PreferredBackBufferWidth = (realwidth);
+            _graphics.PreferredBackBufferHeight = (realheight);
+            _graphics.ApplyChanges();*/
 
             //CODE ABOVE IS IRRELEVANT
 
@@ -103,11 +108,13 @@ namespace Mono_Chess
             // TODO: use this.Content to load your game content here
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             tile = new Texture2D(GraphicsDevice, 1, 1); //Tile pixel, later gets scaled to 1/64 of the screen size (8 * 8 = 64)
-            tile.SetData(new[] { Color.White } );
+            tile.SetData(new[] { Color.White });
 
             //Create render target, set it to use the graphics card we're using, and the native width and height (determined by aspect ratio on init)
             _renderTarget = new RenderTarget2D(GraphicsDevice, realwidth, realheight);
             ScalePositionRenderTarget();
+
+            font = Content.Load<SpriteFont>("GameOver");
 
             pieces.LoadContent(Content);
             _graphics.ApplyChanges();
@@ -116,15 +123,15 @@ namespace Mono_Chess
         protected override void Update(GameTime gameTime)
         {
             // TODO: Add your update logic here
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
             lastkey = currentkey;
             currentkey = Keyboard.GetState();
 
-            keytimer -= (int) gameTime.ElapsedGameTime.TotalMilliseconds;
+            keytimer -= (int)gameTime.ElapsedGameTime.Milliseconds;
 
-            //Switch between fullscree and windowed mode (fullscreen default) (this.IsActive)
+            //Switch between fullscreen and windowed mode (fullscreen default) (this.IsActive)
             if (keytimer < 1 && lastkey.IsKeyUp(Keys.F11) && currentkey.IsKeyDown(Keys.F11) && IsActive)
             {
                 if (_graphics.IsFullScreen)
@@ -148,53 +155,144 @@ namespace Mono_Chess
                 keytimer = KEYPRESSDELAY;
             }
 
-            pieces.Update(gameTime, IsActive);
+            //I hate myself, also EVEN MORE OF A DISGUSTING HACK THAN BEFORE
+            var gross = pieces.Update(gameTime, IsActive);
+            validmoves = gross.Item1;
+            white = gross.Item2;
+            black = gross.Item3;
+
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Black);
-
-            // TODO: Add your drawing code here
-            //transformMatrix: Matrix.CreateScale((Window.ClientBounds.Width / realwidth), (Window.ClientBounds.Height / realheight), 0f) (inside .Begin)
-
-            //Render to _renderTarget
-            GraphicsDevice.SetRenderTarget(_renderTarget);
-
-            //Enable sampling so scaling looks nicer
-            _spriteBatch.Begin(samplerState: SamplerState.AnisotropicClamp);
-
-            for (int j = 0; j < 8; j++)
+            if (white[3] != 1 && black[3] != 1)
             {
-                for (int i = 0; i < 8; i++)
+                // TODO: Add your drawing code here
+                //transformMatrix: Matrix.CreateScale((Window.ClientBounds.Width / realwidth), (Window.ClientBounds.Height / realheight), 0f) (inside .Begin)
+
+                //Render to _renderTarget
+                GraphicsDevice.SetRenderTarget(_renderTarget);
+
+                //Clear _renderTarget
+                GraphicsDevice.Clear(Color.Black);
+
+                //Enable sampling so scaling looks nicer
+                _spriteBatch.Begin(samplerState: SamplerState.AnisotropicClamp);
+
+                int xking = -1; int yking = -1;
+                Color tilecolor;
+
+                //Avoid repeating conditions
+                if (white[2] == 1)
                 {
-                    _spriteBatch.Draw(  
-                                      tile, 
-                                      new Vector2((realwidth / 8) * i, (realheight / 8) * j),
-                                      null, //new Rectangle(0, 0, width / 8, height / 8), //x pos, y pos, width, height. Initial attempt at rendering board
-                                      (!Convert.ToBoolean(((j + i) % 2)) ? Color.Beige : Color.Sienna), //(!Convert.ToBoolean((j % 2)) ? (!Convert.ToBoolean((i % 2)) ? Color.White : Color.Purple) : (!Convert.ToBoolean((i % 2)) ? Color.Purple : Color.White)), <- OLD VERSION (Hate that I saw this in a vid and did not figure it out by myself)
-                                      0f,
-                                      Vector2.Zero,
-                                      (realwidth * realheight) / 8, //(REALWIDTH * REALHEIGHT) / 8 (1/64 of the width height screen ratio (8 * 8 = 64))
-                                      SpriteEffects.None,
-                                      0f
-                                     ); 
+                    xking = white[1];
+                    yking = white[0];
                 }
+
+                else if (black[2] == 1)
+                {
+                    xking = black[1];
+                    yking = black[0];
+                }
+
+                for (int j = 0; j < 8; j++)
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        //The first line will start with a light tile, meaning even line and columns will be light. In case only the line or column is odd then we are either in an even line but odd column or odd line and even column meaning we draw a dark tile instead (math is from vid, originally I had an additional ternary expression inside a ternary expression before this became an if else struct for simplicity)
+                        if (!Convert.ToBoolean(((j + i) % 2)))
+                        {
+                            tilecolor = Color.Beige;
+
+                            if (j == yking && i == xking)
+                                tilecolor = Color.Red;
+
+                            else if (validmoves[j, i])
+                                tilecolor = Color.DeepSkyBlue;
+                        }
+
+                        else
+                        {
+                            tilecolor = Color.Sienna;
+
+                            if (j == yking && i == xking)
+                                tilecolor = Color.DarkRed;
+
+                            else if (validmoves[j, i])
+                                tilecolor = Color.RoyalBlue;
+                        }
+
+                        _spriteBatch.Draw(
+                                          tile,
+                                          new Vector2((realwidth / 8) * i, (realheight / 8) * j),
+                                          null, //new Rectangle(0, 0, width / 8, height / 8), //x pos, y pos, width, height. Initial attempt at rendering board if valid move paint blue if not valid move check if in check too
+                                          tilecolor,
+                                          0f,
+                                          Vector2.Zero,
+                                          (realwidth * realheight) / 64, //(REALWIDTH * REALHEIGHT) / 8 (1/64 of the width height screen ratio (8 * 8 = 64))
+                                          SpriteEffects.None,
+                                          0f
+                                         );
+                    }
+                }
+
+                pieces.Draw(_spriteBatch);
+                _spriteBatch.End();
+
+                //Set to default render target (screen)
+                GraphicsDevice.SetRenderTarget(null);
+
+                //Clear window
+                GraphicsDevice.Clear(Color.Black);
+
+                _spriteBatch.Begin(samplerState: SamplerState.AnisotropicClamp);
+                //Vector2.Zero was replaced by our Rectangle that gives us the scaling and starting positions (see documentation)
+                _spriteBatch.Draw(_renderTarget, _renderDestination, Color.White);
+                _spriteBatch.End();
+
+                base.Draw(gameTime);
             }
 
-            pieces.Draw(_spriteBatch);
-            _spriteBatch.End();
+            //Draw game over text, say who won and to press R to restart
+            else
+            {
+                //Render to _renderTarget
+                GraphicsDevice.SetRenderTarget(_renderTarget);
 
-            //Set to default render target (screen)
-            GraphicsDevice.SetRenderTarget(null);
+                //Clear _renderTarget
+                GraphicsDevice.Clear(Color.Black);
 
-            _spriteBatch.Begin(samplerState: SamplerState.AnisotropicClamp);
-            //Vector2.Zero was replaced by our Rectangle that gives us the scaling and starting positions (see documentation)
-            _spriteBatch.Draw(_renderTarget, _renderDestination, Color.White);
-            _spriteBatch.End();
+                //Enable sampling so scaling looks nicer
+                _spriteBatch.Begin(samplerState: SamplerState.AnisotropicClamp);
 
-            base.Draw(gameTime);
+                _spriteBatch.DrawString(
+                                        font,
+                                        "Game Over.\n" + (white[3] == 1 ? "White " : "Black ") + "Won!\n\n" + "Press R to Restart.",
+                                        new Vector2((realwidth / 2) - 200,(realheight / 2) - 200),
+                                        Color.White,
+                                        0f,
+                                        Vector2.Zero,
+                                        fontscale,
+                                        SpriteEffects.None,
+                                        0f
+                                        );
+
+                _spriteBatch.End();
+
+                //Set to default render target (screen)
+                GraphicsDevice.SetRenderTarget(null);
+
+                //Clear window
+                GraphicsDevice.Clear(Color.Black);
+
+                _spriteBatch.Begin(samplerState: SamplerState.AnisotropicClamp);
+                //Vector2.Zero was replaced by our Rectangle that gives us the scaling and starting positions (see documentation)
+                _spriteBatch.Draw(_renderTarget, _renderDestination, Color.White);
+                _spriteBatch.End();
+
+                base.Draw(gameTime);
+            }
         }
 
         private void ScalePositionRenderTarget()
@@ -215,7 +313,7 @@ namespace Mono_Chess
             _renderDestination.Y = ((GraphicsDevice.Viewport.Height - _renderDestination.Height) / 2);
 
             //Create scale and do a matrix invert idk also send a Vector2 to store letterboxing offset from top and left (letterboxing offset after board is irrelevant). Figure out why math below needed
-            pieces.UpdateResolution(realwidth, realheight, Matrix.Invert(Matrix.CreateScale(scale, scale , 1.0f)), new Vector2(_renderDestination.X, _renderDestination.Y));
+            pieces.UpdateResolution(realwidth, realheight, Matrix.Invert(Matrix.CreateScale(scale, scale, 1.0f)), new Vector2(_renderDestination.X, _renderDestination.Y));
 
             //What a minor spelling mistake does to a mf
             //Debug.WriteLine("X: " + _renderDestination.Width + " | " + xscale + " | " + realwidth);
@@ -230,21 +328,24 @@ namespace Mono_Chess
             {
                 resizing = true; //Prevent window from calculating nonstop when user is draggin window
 
-                switch( ((int)(((float)GraphicsDevice.Viewport.Width / (float)GraphicsDevice.Viewport.Height) * 10)) )
+                switch (((int)(((float)GraphicsDevice.Viewport.Width / (float)GraphicsDevice.Viewport.Height) * 10)))
                 {
                     case 16:
                         realwidth = 1920;
                         realheight = 1200;
+                        fontscale = 5;
                         break;
 
                     case 17:
                         realwidth = 1920;
                         realheight = 1080;
+                        fontscale = 5;
                         break;
 
                     default:
                         realwidth = 1920;
                         realheight = 1440;
+                        fontscale = 5;
                         break;
                 }
 
@@ -263,29 +364,34 @@ namespace Mono_Chess
  * 
  * - Background Image                           | DONE
  * - Sprites for pieces white and black         | DONE
- * - Sfx for picking up piece and placing it    | 
+ * - Sfx for picking up piece and placing it    | DONE
  * 
  * Desired behaviour:
  * 
- * - When a piece is picked up, showcase possible moves.
+ * - Apply piece rules.
+ * - When a piece is picked up, showcase possible moves. | DONE
+ * - When a pawn reaches the other side of the board (9 for white, 1 for black), he can choose to become a queen, bishop, rook (tower) or knight (honse). (Basically anything other than a king or a pawn) | DONE
+ * - Check fucntion that restricts the player to only moving the king. | DONE
+ * - Check mate bool that ends the game. | DONE
+ *
  * - If user clicks anywere but a valid move, we simply put the piece back down. | DONE
- * - Undo function that can undo all moves from current point in time.
- * - Redo function that can redo all moves so long as no new one has been made.
  * - When a piece goes to the same place as another, the moving piece erases the old one. | DONE
- * - When a pawn reaches the other side of the board (9 for white, 1 for black), he can choose to become a queen, bishop, rook (tower) or knight (honse). (Basically anything other than a king or a pawn)
- * - Special moves: Castling, En Passant (5 for white, 4 for black), and the above mentioned.
- * - Check fucntion that restricts the player to only moving the king.
- * - Check mate function that ends the game.
  * 
- * En Passant:
+ * - Undo function that can undo all moves from current point in time. | NO TIME
+ * - Redo function that can redo all moves so long as no new one has been made. | NO TIME
+ * - Special moves: Castling, En Passant (5 for white, 4 for black), and the above mentioned. | NO TIME
+ * 
+ * En Passant: | NO TIME
  * 
  * - If a black piece moves to the same spot as a white pawn is in(5 only) or a white piece moves to the spam spot as a black one (4 only), the player can capture it
  *   by moving to the square above said pawn.
  *  
- * Castling:
+ * Castling: | NO TIME
  * 
  * - If rook or king move, castling is disabled.
  * - King cannot be in check.
  * - Can't Castle King onto a check.
  * - No pieces between rook and king.
+ * 
+ * - AI | NO TIME
 */
