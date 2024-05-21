@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SourceFile>C:/Users/Denton/Documents/1 - Essential/1 - Personal/1 - Programming and Linux/3 - Uni Stuff/1st Year/S2/TDJD/P2/Mono Chess/Mono Chess/Content/Place.mp3</SourceFile>
+  <SourceTime>2024-05-21T04:23:57.0363398+01:00</SourceTime>
+  <DestFile>C:/Users/Denton/Documents/1 - Essential/1 - Personal/1 - Programming and Linux/3 - Uni Stuff/1st Year/S2/TDJD/P2/Mono Chess/Mono Chess/Content/bin/DesktopGL/Place.xnb</DestFile>
+  <DestTime>2024-05-21T04:25:00.4800277+01:00</DestTime>
+  <Importer>Mp3Importer</Importer>
+  <ImporterTime>2022-07-26T12:44:56+01:00</ImporterTime>
+  <Processor>SoundEffectProcessor</Processor>
+  <ProcessorTime>2022-07-26T12:44:56+01:00</ProcessorTime>
+  <Parameters>
+    <Key>Quality</Key>
+    <Value>Best</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput />
+</PipelineBuildEvent>
