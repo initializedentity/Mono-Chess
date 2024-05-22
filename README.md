@@ -110,32 +110,45 @@ Esta função, ao contrário da LoadContent() anterior, contém código para dar
 > [!NOTE]
 > O tabuleiro é carregado no Game1.cs, desenhado totalmente pelo computador, utilizando um scaling de 1/64 para cada quadrado.
 
-![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/5de13c3c-b87a-4c90-8858-6077023e2c31)
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/5355fc16-55e9-4db9-a368-8973d01023ce)
 
-![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/e3b50c21-d31e-4db1-8e61-d4e6faf52052)
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/dad2ca68-f032-4955-adc7-4a8370b0df0c)
 
-![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/6c94de5a-90bc-4f34-ab02-7182a7c2a6c3)
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/ff8edac9-cebf-453a-bab0-ecf806529af6)
 
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/36998f36-e435-4382-afc8-b9845e9e4404)
 
-Imagens 12, 13 e 14 - Função Update()
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/b316024b-8d58-467f-bbd8-cc4fcc33c73a)
 
-Nesta função, temos código para gerir input do rato, calcular onde o cursor está na resolução real (isto porque o rato tem de interagir com a resolução real do jogo), código para quando pegamos numa peça, consigamos trocá-la de sítio e que faça um som quando o fazemos, código para evitar que o jogador adversário consiga mexer nas nossas peças e as regras de promoção para os peões, onde é preciso clicar nas teclas 1, 2, 3 ou 4 para promover o peão para a peça desejada. (1 é para a torre, 2 é para o cavalo, 3 é para o bispo e 4 é para a rainha)
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/0bf0af9c-0c3c-4231-9b3c-3f911c5d02d0)
+
+Imagens 12, 13, 14, 15, 16 e 17 - Função Update()
+
+Nesta função, temos código para gerir input do rato, calcular onde o cursor está na resolução real (isto porque o rato tem de interagir com a resolução real do jogo), código para quando pegamos numa peça, consigamos trocá-la de sítio e que faça um som quando o fazemos, código para evitar que o jogador adversário consiga mexer nas nossas peças e as regras de promoção para os peões, onde é preciso clicar nas teclas 1, 2, 3 ou 4 para promover o peão para a peça desejada.
+
+> [!NOTE]
+> 1 é para a torre, 2 é para o cavalo, 3 é para o bispo e 4 é para a rainha.
+
+> [!WARNING]
+> A nota acima indica uma funcionalidade que não está funcional no momento em que este relatório foi escrito, e o rei consegue dar cheque a si próprio, onde a solução para este problema em particular é "comer" o rei em si.
+
+Também verifica se o rei está em cheque e se aconteceu um chequemate.
 
 ![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/abd2ae6f-ed09-4a9a-9fae-38080849ab55)
 
-Imagem 15 - Função Draw()
+Imagem 18 - Função Draw()
 
 Nesta função, temos mais do mesmo que a outra função Draw(), ou seja, renderizamos os conteúdos já carregados para o ecrã.
 
 ![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/60b6c2c5-6d9d-4dd0-a3b6-fb1dfd99cc0a)
 
-Imagem 16 - Função SpritePiece()
+Imagem 19 - Função SpritePiece()
 
 Nesta função, temos código para colocar as peças no tabuleiro.
 
 ![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/ed3e498b-6b6b-47b4-9391-98acaf7cbc41)
 
-Imagem 17 - Função UpdateResolution()
+Imagem 20 - Função UpdateResolution()
 
 Nesta função, temos código para lidar com as várias resoluções que o jogo suporta.
 
@@ -143,13 +156,13 @@ Nesta função, temos código para lidar com as várias resoluções que o jogo 
 
 ![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/62c9f025-f0eb-4f4e-bf98-deaeb714b946)
 
-Imagem 18 e 19 - Função ResetBoard()
+Imagem 21 e 22 - Função ResetBoard()
 
 Nesta função, temos código para voltar a colocar cada peça na sua posição padrão.
 
 ![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/9b453486-ed3f-4afa-bdd1-1881f180d4bf)
 
-Imagem 20 - Função ResetLegalMoves()
+Imagem 23 - Função ResetLegalMoves()
 
 Nesta função, temos código que faz com que se dê reset à matriz que determina as posições legais da peça atual.
 
@@ -159,7 +172,13 @@ Nesta função, temos código que faz com que se dê reset à matriz que determi
 
 ![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/22478163-fe59-456e-99ab-795031ce5816)
 
-Imagens 21, 22 e 23 - Função LegalMoves()
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/74a7f78f-59cc-44fb-a4ab-4ed8363fb508)
+
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/b51f23ba-da52-4a4c-9511-735a6e80a042)
+
+![image](https://github.com/initializedentity/Mono-Chess/assets/106490681/ddabcb26-18bb-42e2-8943-70b168102654)
+
+Imagens 24, 25, 26, 27, 28 e 29 - Função LegalMoves()
 
 Nesta função, existe todo o código responsável pelas regras impostas a cada peça.
 
