@@ -33,10 +33,10 @@ namespace Mono_Chess
         private piece[,] board = new piece[8, 8]; //NOOOOOO YOU DON'T UNDERSTAND YOU CAN'T USE AN ENUM WITH AN INT, MUH ABSTRACTION, YOU MUST MAKE IT THE SAME OBJECT TYPE HOW ELSE AM I SUPPOSED THAT AN ENUM WITH AN INTEGER VALUE IS THE SAME AS A PRIMITIVE INT
         private bool[,] legalmoves = new bool[8, 8]; //Sent to Game.1cs so it knows which squares to paint as being valid moves
         private int width = 1920, height = 1440, xoffset, yoffset, clicktimer, clickdelay, selectedxoffset, selectedyoffset; //real ones + offsets
-        private float scale, selectedscale; //Scale for pieces
+        private float scale, selectedscale, inversescale; //Scale for pieces, scale when piece selected and inverse scale
         private bool whiteturn = true; //White always goes first
 
-        private Matrix inversematrix;
+        //private Matrix inversematrix;
         private Vector2 letterboxing, intransit; //Recieves halved values since letterboxing beyond board is irrelevant, these are removed from cursor positioning before descaling (RenderTarget goes from start of board to end, no letterboxing). intransit stores piece in transit. also check and checkmate for white and black
 
         //First two are positions on matrix, 3rd index is check 4th is checkmate
@@ -111,6 +111,9 @@ namespace Mono_Chess
                         pawnpromotion[3] = 0;
                     }
                 }
+
+                //NOT ON GITHUB (irrelevant since whenever we click with the mouse we will enter else and reset it there)
+                clicktimer = clickdelay;
             }
 
             else
@@ -118,20 +121,24 @@ namespace Mono_Chess
                 lastclick = currentclick;
                 currentclick = Mouse.GetState();
 
+                Debug.WriteLine("X: " + currentclick.X);
+                Debug.WriteLine("Y: " + currentclick.Y);
+
                 //Check if time between clicks has elapsed and valid left click
                 if (clicktimer < 1 && lastclick.LeftButton == ButtonState.Released && currentclick.LeftButton == ButtonState.Pressed && IsActive)
                 {
                     //Figure out why math below needed
-                    Vector2 scaledmouse = Vector2.Transform(new Vector2((currentclick.X - letterboxing.X), (currentclick.Y - letterboxing.Y)), inversematrix);
+                    //Vector2 scaledmouse = Vector2.Transform(new Vector2((currentclick.X - letterboxing.X), (currentclick.Y - letterboxing.Y)), inversematrix);
+                    Vector2 scaledmouse = new Vector2 (((currentclick.X - letterboxing.X) * inversescale), ((currentclick.Y - letterboxing.Y) * inversescale));
 
                     //This math I know, we simply figure out what an eight of both axis is, and then divide the positions by the eight, the value ROUNDED DOWN is the current xy position in the matrix :)
                     int xeighth = width / 8, yeighth = height / 8;
                     int xpos = (int)(scaledmouse.X / xeighth), ypos = (int)(scaledmouse.Y / yeighth);
 
                     //Check if valid range (avoid invalid ranges < 0 and > 7)
-                    if (scaledmouse.X >= 0 && scaledmouse.Y >= 0 && xpos < 8 && ypos < 8)
+                    if (xpos >= 0 && ypos >= 0 && xpos < 8 && ypos < 8)
                     {
-                        //If piece in transit 
+                        //Check if piece in transit
                         if (intransit.X >= 0 && intransit.Y >= 0)
                         {
                             //WHY GOD WHYYYYYY ENOUGH IFS PLEASE I CAN'T STOMACH THIS ABOMINATION (add LegalMoves call to check after placing piece to see if king in check and checkmate)
@@ -142,7 +149,7 @@ namespace Mono_Chess
 
                                 else if (board[ypos, xpos] == piece.blackking && intransit.Y != blackking[0] && intransit.X != blackking[1])
                                     blackking[3] = 1;
-                                
+
                                 board[ypos, xpos] = board[(int)intransit.Y, (int)intransit.X];
 
                                 if (ypos == 7 && board[ypos, xpos] == piece.blackpawn)
@@ -195,7 +202,8 @@ namespace Mono_Chess
                                     board[(int)intransit.Y, (int)intransit.X] = piece.none;
                                     whiteturn = !whiteturn;
 
-                                    if ((board[ypos, xpos] == piece.whiteking) && ypos != whiteking[0] && xpos != whiteking[1])
+                                    //NOT ON GITHUB (ADDED PARENTHESIS AND CHANGED LAST && OPERATOR TO ||
+                                    if ((board[ypos, xpos] == piece.whiteking) && (ypos != whiteking[0] || xpos != whiteking[1]))
                                     {
                                         whiteking[2] = 0;
 
@@ -203,8 +211,9 @@ namespace Mono_Chess
                                         whiteking[1] = xpos;
                                     }
 
-                                    else if (whiteking[1] == 1)
-                                        whiteking[3] = 1;
+                                    //STILL ON GITHUB BUT REMOVED
+                                    /*else if (whiteking[1] == 1)
+                                        whiteking[3] = 1;*/
 
 
 
@@ -217,8 +226,9 @@ namespace Mono_Chess
 
                                     }
 
-                                    else if (blackking[1] == 1)
-                                        blackking[3] = 1;
+                                    //STILL ON GITHUB BUT REMOVED
+                                    /*else if (blackking[1] == 1)
+                                        blackking[3] = 1;*/
 
                                     //Code below here is not relevant to the above comment
                                 }
@@ -226,11 +236,11 @@ namespace Mono_Chess
                                 intransit.X = intransit.Y = -1;
                                 ResetLegalMoves();
                                 place.Play();
-                            }
 
-                            //MOAR DEBUUUUUUUUUUUUUUG
-                            /*Debug.WriteLine(board[ypos, xpos]);
-                            Debug.WriteLine(board[(int)intransit.Y, (int)intransit.X]);*/
+                                //MOAR DEBUUUUUUUUUUUUUUG
+                                /*Debug.WriteLine(board[ypos, xpos]);
+                                Debug.WriteLine(board[(int)intransit.Y, (int)intransit.X]);*/
+                            }
                         }
 
                         //If no piece in transit and piece not deselected, and currently attempting to select a piece of the same color as the players turn
@@ -318,11 +328,13 @@ namespace Mono_Chess
             };
         }
 
-        public void UpdateResolution(int _width, int _height, Matrix _inversematrix, Vector2 _letterboxing)
+        //public void UpdateResolution(int _width, int _height, Matrix _inversematrix, Vector2 _letterboxing, float _inversescale) //inversescale for debugging purposes, was not originalyl here
+        public void UpdateResolution(int _width, int _height, float _inversescale, Vector2 _letterboxing)
         {
             width = _width;
             height = _height;
-            inversematrix = _inversematrix;
+            //inversematrix = _inversematrix;
+            inversescale = _inversescale;
             letterboxing = _letterboxing;
 
             //Update Offset
@@ -498,13 +510,15 @@ namespace Mono_Chess
 
                         if (x - 1 >= 0)
                         {
-                            if (board[y + 1, x - 1] >= piece.whitepawn && board[y + 1, x - 1] <= piece.blackking)
+                            //NOT ON GITHUB REPLACED BLACKKING WITH WHITEKING
+                            if (board[y + 1, x - 1] >= piece.whitepawn && board[y + 1, x - 1] <= piece.whiteking)
                                 legalmoves[y + 1, x - 1] = true;
                         }
 
                         if (x + 1 < 8)
                         {
-                            if (board[y + 1, x + 1] >= piece.whitepawn && board[y + 1, x + 1] <= piece.blackking)
+                            //NOT ON GITHUB REPLACED BLACKKING WITH WHITEKING
+                            if (board[y + 1, x + 1] >= piece.whitepawn && board[y + 1, x + 1] <= piece.whiteking)
                                 legalmoves[y + 1, x + 1] = true;
                         }
                     }
@@ -767,7 +781,8 @@ namespace Mono_Chess
 
                         if (x - 1 >= 0)
                         {
-                            if (board[(y + 2), (x + 1)] == piece.none || (board[(y + 2), (x + 1)] >= pawn && board[(y + 2), (x + 1)] <= king))
+                            //NOT ON GITHUB CORRECTED X + 1 TO X - 1 (caused king to be able to be in check and crash at 8,8 for some reason)
+                            if (board[(y + 2), (x - 1)] == piece.none || (board[(y + 2), (x - 1)] >= pawn && board[(y + 2), (x - 1)] <= king))
                                 legalmoves[(y + 2), (x - 1)] = true;
                         }
                     }

@@ -312,9 +312,18 @@ namespace Mono_Chess
             _renderDestination.X = ((GraphicsDevice.Viewport.Width - _renderDestination.Width) / 2);
             _renderDestination.Y = ((GraphicsDevice.Viewport.Height - _renderDestination.Height) / 2);
 
-            //Create scale and do a matrix invert idk also send a Vector2 to store letterboxing offset from top and left (letterboxing offset after board is irrelevant). Figure out why math below needed
-            pieces.UpdateResolution(realwidth, realheight, Matrix.Invert(Matrix.CreateScale(scale, scale, 1.0f)), new Vector2(_renderDestination.X, _renderDestination.Y));
+            float inversescale = 0f;
 
+            if (yscale < xscale)
+                inversescale = (float)((float)(float)_renderTarget.Height) / GraphicsDevice.Viewport.Height;
+
+            else
+                inversescale = (float)((float)_renderTarget.Width / (float)GraphicsDevice.Viewport.Width);
+
+            //Create scale and do a matrix invert idk also send a Vector2 to store letterboxing offset from top and left (letterboxing offset after board is irrelevant). Figure out why math below needed
+            //pieces.UpdateResolution(realwidth, realheight, Matrix.Invert(Matrix.CreateScale(scale, scale, 1.0f)), new Vector2(_renderDestination.X, _renderDestination.Y), inversescale); inversescale was not present, it was used for debug due to wrongful inversescale calculation
+            pieces.UpdateResolution(realwidth, realheight, inversescale, new Vector2(_renderDestination.X, _renderDestination.Y));
+            
             //What a minor spelling mistake does to a mf
             //Debug.WriteLine("X: " + _renderDestination.Width + " | " + xscale + " | " + realwidth);
             //Debug.WriteLine("Y: " + _renderDestination.Height + " | " + yscale + " | " + realheight);
