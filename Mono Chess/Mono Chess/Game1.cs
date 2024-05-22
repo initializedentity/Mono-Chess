@@ -268,8 +268,8 @@ namespace Mono_Chess
 
                 _spriteBatch.DrawString(
                                         font,
-                                        "Game Over.\n" + (white[3] == 1 ? "White " : "Black ") + "Won!\n\n" + "Press R to Restart.",
-                                        new Vector2((realwidth / 2) - 200,(realheight / 2) - 200),
+                                        "    Game Over.\n" + (white[3] == 1 ? "    White " : "     Black ") + "Won!\n\n" + "Press R to Restart.",
+                                        new Vector2((realwidth / 2) - 250,(realheight / 2) - 250),
                                         Color.White,
                                         0f,
                                         Vector2.Zero,

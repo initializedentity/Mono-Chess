@@ -137,6 +137,12 @@ namespace Mono_Chess
                             //WHY GOD WHYYYYYY ENOUGH IFS PLEASE I CAN'T STOMACH THIS ABOMINATION (add LegalMoves call to check after placing piece to see if king in check and checkmate)
                             if (legalmoves[ypos, xpos])
                             {
+                                if (board[ypos, xpos] == piece.whiteking && intransit.Y != whiteking[0] && intransit.X != whiteking[1])
+                                    whiteking[3] = 1;
+
+                                else if (board[ypos, xpos] == piece.blackking && intransit.Y != blackking[0] && intransit.X != blackking[1])
+                                    blackking[3] = 1;
+                                
                                 board[ypos, xpos] = board[(int)intransit.Y, (int)intransit.X];
 
                                 if (ypos == 7 && board[ypos, xpos] == piece.blackpawn)
@@ -155,79 +161,73 @@ namespace Mono_Chess
                                     pawnpromotion[3] = xpos;
                                 }
 
+                                ResetLegalMoves();
+                                LegalMoves(xpos, ypos);
+
+                                if (legalmoves[whiteking[0], whiteking[1]] && intransit.Y != whiteking[0] && intransit.X != whiteking[1])
+                                    whiteking[2] = 1;
+
+                                else if (legalmoves[blackking[0], blackking[1]] && intransit.Y != blackking[0] && intransit.X != blackking[1])
+                                    blackking[2] = 1;
+
+                                if (whiteking[2] == 1 || blackking[2] == 1)
+                                {
+                                    int validmoves = 0;
+                                    for (int j = 0; j < 8; j++)
+                                    {
+                                        for (int i = 0; i < 8; i++)
+                                        {
+                                            if (legalmoves[j, i])
+                                                validmoves++;
+
+                                        }
+                                    }
+
+                                    if (validmoves < 2 && whiteking[2] == 1)
+                                        whiteking[3] = 1;
+
+                                    else if (validmoves < 2 && blackking[2] == 1)
+                                        blackking[3] = 1;
+                                }
+
                                 if (xpos != (int)intransit.X || ypos != (int)intransit.Y)
                                 {
                                     board[(int)intransit.Y, (int)intransit.X] = piece.none;
                                     whiteturn = !whiteturn;
 
-                                    //Placed here to avoid checking for checks when piece was just dropped instead of placed
-                                    ResetLegalMoves();
-                                    LegalMoves(xpos, ypos);
-
-                                    if ((board[ypos, xpos] == piece.whiteking || board[ypos, xpos] == piece.blackking) && ((ypos != whiteking[0] && xpos != whiteking[1]) || (ypos != blackking[0] && xpos != blackking[1])))
+                                    if ((board[ypos, xpos] == piece.whiteking) && ypos != whiteking[0] && xpos != whiteking[1])
                                     {
                                         whiteking[2] = 0;
-                                        blackking[2] = 0;
+
+                                        whiteking[0] = ypos;
+                                        whiteking[1] = xpos;
                                     }
 
-                                    if (legalmoves[whiteking[0], whiteking[1]])
-                                        whiteking[2] = 1;
-
-                                    if (legalmoves[blackking[0], blackking[1]])
-                                        blackking[2] = 1;
-
-                                    if (whiteking[2] == 1)
-                                    {
+                                    else if (whiteking[1] == 1)
                                         whiteking[3] = 1;
-                                        for (int j = 0; j < 8; j++)
-                                        {
-                                            for (int i = 0; i < 8; i++)
-                                            {
-                                                if (legalmoves[j, i])
-                                                {
-                                                    whiteking[3] = 0;
-                                                    break;
-                                                }
 
-                                            }
-                                        }
-                                    }
 
-                                    if (blackking[2] == 1)
+
+                                    if ((board[ypos, xpos] == piece.blackking) && ypos != blackking[0] && xpos != blackking[1])
                                     {
-                                        blackking[3] = 1;
-                                        for (int j = 0; j < 8; j++)
-                                        {
-                                            for (int i = 0; i < 8; i++)
-                                            {
-                                                if (legalmoves[j, i])
-                                                {
-                                                    blackking[3] = 0;
-                                                    break;
-                                                }
+                                        blackking[2] = 0;
 
-                                            }
-                                        }
+                                        blackking[0] = ypos;
+                                        blackking[1] = xpos;
+
                                     }
+
+                                    else if (blackking[1] == 1)
+                                        blackking[3] = 1;
+
                                     //Code below here is not relevant to the above comment
-                                }
-
-                                if (board[ypos, xpos] == piece.whiteking)
-                                {
-                                    whiteking[0] = ypos;
-                                    whiteking[1] = xpos;
-                                }
-
-                                else if (board[ypos, xpos] == piece.blackking)
-                                {
-                                    blackking[0] = ypos;
-                                    blackking[1] = xpos;
                                 }
 
                                 intransit.X = intransit.Y = -1;
                                 ResetLegalMoves();
                                 place.Play();
                             }
+
                             //MOAR DEBUUUUUUUUUUUUUUG
                             /*Debug.WriteLine(board[ypos, xpos]);
                             Debug.WriteLine(board[(int)intransit.Y, (int)intransit.X]);*/
@@ -441,6 +441,22 @@ namespace Mono_Chess
         {
             legalmoves[y, x] = true;
 
+            piece pawn = piece.none, king = piece.none;
+
+            if (board[y, x] >= piece.whitepawn && board[y, x] <= piece.whiteking)
+            {
+                //Make trash readable
+                pawn = piece.blackpawn;
+                king = piece.blackking;
+            }
+
+            else if (board[y, x] >= piece.blackpawn && board[y, x] <= piece.blackking)
+            {
+                //Make trash readable
+                pawn = piece.whitepawn;
+                king = piece.whiteking;
+            }
+
             //Allow checking kings moves if whitecheck.X or blackcheck.X == 1
             switch (board[y, x])
             {
@@ -505,54 +521,50 @@ namespace Mono_Chess
                 case piece.blackking:
                 case piece.whiteking:
 
-                    //Make trash readable
-                    piece pawn = (board[y, x] == piece.whiteking ? piece.blackpawn : piece.whitepawn);
-                    piece queen = (board[y, x] == piece.whiteking ? piece.blackqueen : piece.whitequeen);
-
                     if (y - 1 >= 0)
                     {
-                        if ((board[y - 1, x] == piece.none || board[y - 1, x] >= pawn) && board[y - 1, x] <= queen)
+                        if ((board[y - 1, x] == piece.none || board[y - 1, x] >= pawn) && board[y - 1, x] <= king)
                             legalmoves[y - 1, x] = true;
 
                         if (x - 1 >= 0)
                         {
-                            if ((board[y - 1, x - 1] == piece.none || board[y - 1, x - 1] >= pawn) && board[y - 1, x - 1] <= queen)
+                            if ((board[y - 1, x - 1] == piece.none || board[y - 1, x - 1] >= pawn) && board[y - 1, x - 1] <= king)
                                 legalmoves[y - 1, x - 1] = true;
 
-                            if ((board[y - 1, x - 1] == piece.none || board[y, x - 1] >= pawn) && board[y, x - 1] <= queen)
+                            if ((board[y - 1, x - 1] == piece.none || board[y, x - 1] >= pawn) && board[y, x - 1] <= king)
                                 legalmoves[y, x - 1] = true;
                         }
 
                         if (x + 1 < 8)
                         {
-                            if ((board[y - 1, x + 1] == piece.none || board[y - 1, x + 1] >= pawn) && board[y - 1, x + 1] <= queen)
+                            if ((board[y - 1, x + 1] == piece.none || board[y - 1, x + 1] >= pawn) && board[y - 1, x + 1] <= king)
                                 legalmoves[y - 1, x + 1] = true;
 
-                            if ((board[y - 1, x + 1] == piece.none || board[y, x + 1] >= pawn) && board[y, x + 1] <= queen)
+                            if ((board[y - 1, x + 1] == piece.none || board[y, x + 1] >= pawn) && board[y, x + 1] <= king)
                                 legalmoves[y, x + 1] = true;
                         }
                     }
 
                     if (y + 1 < 8)
                     {
-                        if ((board[y + 1, x] == piece.none || board[y + 1, x] >= pawn) && board[y + 1, x] <= queen)
+                        if ((board[y + 1, x] == piece.none || board[y + 1, x] >= pawn) && board[y + 1, x] <= king)
                             legalmoves[y + 1, x] = true;
 
                         if (x - 1 >= 0)
                         {
-                            if ((board[y + 1, x - 1] == piece.none || board[y + 1, x - 1] >= pawn) && board[y + 1, x - 1] <= queen)
+                            if ((board[y + 1, x - 1] == piece.none || board[y + 1, x - 1] >= pawn) && board[y + 1, x - 1] <= king)
                                 legalmoves[y + 1, x - 1] = true;
 
-                            if ((board[y + 1, x - 1] == piece.none || board[y, x - 1] >= pawn) && board[y, x - 1] <= queen)
+                            if ((board[y + 1, x - 1] == piece.none || board[y, x - 1] >= pawn) && board[y, x - 1] <= king)
                                 legalmoves[y, x - 1] = true;
                         }
 
                         if (x + 1 < 8)
                         {
-                            if ((board[y + 1, x + 1] == piece.none || board[y + 1, x + 1] >= pawn) && board[y + 1, x + 1] <= queen)
+                            if ((board[y + 1, x + 1] == piece.none || board[y + 1, x + 1] >= pawn) && board[y + 1, x + 1] <= king)
                                 legalmoves[y + 1, x + 1] = true;
 
-                            if ((board[y + 1, x + 1] == piece.none || board[y, x + 1] >= pawn) && board[y, x + 1] <= queen)
+                            if ((board[y + 1, x + 1] == piece.none || board[y, x + 1] >= pawn) && board[y, x + 1] <= king)
                                 legalmoves[y, x + 1] = true;
                         }
                     }
@@ -560,18 +572,207 @@ namespace Mono_Chess
                     break;
 
 
-                case piece.whitequeen:
                 case piece.blackqueen:
-                case piece.whitebishop:
+                case piece.whitequeen:
                 case piece.blackbishop:
+                case piece.whitebishop:
+
+                    if (y - 1 >= 0)
+                    {
+                        if(x - 1 >= 0)
+                        {
+                            for(int j = (y - 1), i = (x - 1); j >= 0 && i >= 0; j--, i--)
+                            {
+                                if (board[j, i] == piece.none)
+                                    legalmoves[j, i] = true;
+
+                                else if (board[j, i] >= pawn && board[j, i] <= king)
+                                {
+                                    legalmoves[j, i] = true;
+                                    break;
+                                }
+
+                                else
+                                    break;
+                            }
+                        }
+
+                        if(x + 1 < 8)
+                        {
+                            for (int j = (y - 1), i = (x + 1); j >= 0 && i < 8; j--, i++)
+                            {
+                                if (board[j, i] == piece.none)
+                                    legalmoves[j, i] = true;
+
+                                else if (board[j, i] >= pawn && board[j, i] <= king)
+                                {
+                                    legalmoves[j, i] = true;
+                                    break;
+                                }
+
+                                else
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (y + 1 < 8)
+                    {
+                        if(x + 1 < 8)
+                        {
+                            for (int j = (y + 1), i = (x + 1); j < 8 && i < 8; j++, i++)
+                            {
+                                if (board[j, i] == piece.none)
+                                    legalmoves[j, i] = true;
+
+                                else if (board[j, i] >= pawn && board[j, i] <= king)
+                                {
+                                    legalmoves[j, i] = true;
+                                    break;
+                                }
+
+                                else
+                                    break;
+                            }
+                        }
+
+                        if (x - 1 >= 0)
+                        {
+                            for (int j = (y + 1), i = (x - 1); j < 8 && i >= 0; j++, i--)
+                            {
+                                if (board[j, i] == piece.none)
+                                    legalmoves[j, i] = true;
+
+                                else if (board[j, i] >= pawn && board[j, i] <= king)
+                                {
+                                    legalmoves[j, i] = true;
+                                    break;
+                                }
+
+                                else
+                                    break;
+                            }
+                        }
+                    }
+
+
+                    if (board[y, x] == piece.whitequeen || board[y, x] == piece.blackqueen)
+                        goto case piece.whiterook;
+
+                    break;
 
                 case piece.whiterook:
                 case piece.blackrook:
 
+                    if (y - 1 >= 0)
+                    {
+                        for (int i = (y - 1); i >= 0; i--)
+                        {
+                            if (board[i, x] == piece.none)
+                                legalmoves[i, x] = true;
+
+                            else if (board[i, x] >= pawn && board[i, x] <= king)
+                            {
+                                legalmoves[i, x] = true;
+                                break;
+                            }
+
+                            else
+                                break;
+                        }
+                    }
+
+                    if (y + 1 < 8)
+                    {
+                        for (int i = (y + 1); i < 8; i++)
+                        {
+                            if (board[i, x] == piece.none)
+                                legalmoves[i, x] = true;
+
+                            else if (board[i, x] >= pawn && board[i, x] <= king)
+                            {
+                                legalmoves[i, x] = true;
+                                break;
+                            }
+
+                            else
+                                break;
+                        }
+                    }
+
+                    if (x - 1 >= 0)
+                    {
+                        for (int i = (x - 1); i >= 0; i--)
+                        {
+                            if (board[y, i] == piece.none)
+                                legalmoves[y, i] = true;
+
+                            else if (board[y, i] >= pawn && board[y, i] <= king)
+                            {
+                                legalmoves[y, i] = true;
+                                break;
+                            }
+
+                            else
+                                break;
+                        }
+                    }
+
+                    if (x + 1 < 8)
+                    {
+                        for (int i = (x + 1); i < 8; i++)
+                        {
+                            if (board[y, i] == piece.none)
+                                legalmoves[y, i] = true;
+
+                            else if (board[y, i] >= pawn && board[y, i] <= king)
+                            {
+                                legalmoves[y, i] = true;
+                                break;
+                            }
+
+                            else
+                                break;
+                        }
+                    }
 
                     break;
 
+                case piece.blackknight:
+                case piece.whiteknight:
 
+                    if (y - 2 >= 0)
+                    {
+                        if (x - 1 >= 0)
+                        {
+                            if (board[(y - 2), (x - 1)] == piece.none || (board[(y - 2), (x - 1)] >= pawn && board[(y - 2), (x - 1)] <= king))
+                                legalmoves[(y - 2), (x - 1)] = true;
+                        }
+
+                        if (x + 1 < 8)
+                        {
+                            if (board[(y - 2), (x + 1)] == piece.none || (board[(y - 2), (x + 1)] >= pawn && board[(y - 2), (x + 1)] <= king))
+                                legalmoves[(y - 2), (x + 1)] = true;
+                        }
+                    }
+
+                    if (y + 2 < 8)
+                    {
+                        if (x + 1 < 8)
+                        {
+                            if (board[(y + 2), (x + 1)] == piece.none || (board[(y + 2), (x + 1)] >= pawn && board[(y + 2), (x + 1)] <= king))
+                                legalmoves[(y + 2), (x + 1)] = true;
+
+                        }
+
+                        if (x - 1 >= 0)
+                        {
+                            if (board[(y + 2), (x + 1)] == piece.none || (board[(y + 2), (x + 1)] >= pawn && board[(y + 2), (x + 1)] <= king))
+                                legalmoves[(y + 2), (x - 1)] = true;
+                        }
+                    }
+
+                    break;
             }
         }
     }
