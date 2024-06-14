@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SourceFile>C:/Users/Denton/Documents/1 - Essential/1 - Personal/1 - Programming and Linux/3 - Uni Stuff/1st Year/S2/TDJD/P2/Mono Chess/Mono Chess/Content/Dreamy Flashback.wav</SourceFile>
+  <SourceTime>2024-05-31T17:24:44.3067389+01:00</SourceTime>
+  <DestFile>C:/Users/Denton/Documents/1 - Essential/1 - Personal/1 - Programming and Linux/3 - Uni Stuff/1st Year/S2/TDJD/P2/Mono Chess/Mono Chess/Content/bin/DesktopGL/Dreamy Flashback.xnb</DestFile>
+  <DestTime>2024-05-31T18:10:20.8467114+01:00</DestTime>
+  <Importer>WavImporter</Importer>
+  <ImporterTime>2022-07-26T12:44:56+01:00</ImporterTime>
+  <Processor>SongProcessor</Processor>
+  <ProcessorTime>2022-07-26T12:44:56+01:00</ProcessorTime>
+  <Parameters>
+    <Key>Quality</Key>
+    <Value>Best</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput>
+    <string>C:/Users/Denton/Documents/1 - Essential/1 - Personal/1 - Programming and Linux/3 - Uni Stuff/1st Year/S2/TDJD/P2/Mono Chess/Mono Chess/Content/bin/DesktopGL/Dreamy Flashback.ogg</string>
+  </BuildOutput>
+</PipelineBuildEvent>
